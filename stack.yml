@@ -1,0 +1,26 @@
+version: '3.8'
+services:
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto
+    ports:
+      - 1883:1883
+    restart: always
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: influxdb
+    ports:
+      # de modificat - trb vazut doar intern
+      - 8086:8086
+    restart: always
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    environment:
+      - INFLUXDB_RETENTION_POLICY=autogen
+      - INFLUXDB_DATA_RESOLUTION=1s
+
+volumes:
+  influxdb_data:
