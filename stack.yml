@@ -2,25 +2,60 @@ version: '3.8'
 services:
   mosquitto:
     image: eclipse-mosquitto:latest
-    container_name: mosquitto
     ports:
       - 1883:1883
+    networks:
+      - adapter_mosquitto_network
     restart: always
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
 
   influxdb:
     image: influxdb:1.8
-    container_name: influxdb
-    ports:
-      # de modificat - trb vazut doar intern
-      - 8086:8086
+    networks:
+      - grafana_influxdb_network
+      - adapter_influxdb_network
     restart: always
     volumes:
       - influxdb_data:/var/lib/influxdb
     environment:
       - INFLUXDB_RETENTION_POLICY=autogen
       - INFLUXDB_DATA_RESOLUTION=1s
+
+  # de adaugat aplicatia mea
+  adapter:
+    build: ./adapter
+    image: adapter
+    restart: always
+    depends_on:
+      - mosquitto
+      - influxdb
+    environment:
+      - DEBUG_DATA_FLOW=True
+      - MOSQUITTO_HOST=mosquitto
+      - INFLUXDB_HOST=influxdb
+      - DB_NAME=iot_data
+    networks:
+      - adapter_mosquitto_network
+      - adapter_influxdb_network
+
+  grafana:
+    image: grafana/grafana:latest
+    networks:
+      - grafana_influxdb_network
+    restart: always
+    depends_on:
+      - influxdb
+    ports:
+      - 80:3000
+    environment:
+      - GF_SECURITY_ADMIN_USER=asistent
+      - GF_SECURITY_ADMIN_PASSWORD=grafanaSPRC2023
+
+networks:
+  grafana_influxdb_network:
+  adapter_mosquitto_network:
+  adapter_influxdb_network:
 
 volumes:
   influxdb_data:

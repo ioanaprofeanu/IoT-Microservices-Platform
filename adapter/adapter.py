@@ -2,16 +2,22 @@ from datetime import datetime, timezone, timedelta
 import json
 import paho.mqtt.client as mqtt
 from influxdb import InfluxDBClient
-import time
+import os
 
-# TODO: creeaza env var
-iot_data = "iot_data"
+db_name = os.environ.get('DB_NAME')
+debug_data_flow = os.environ.get('DEBUG_DATA_FLOW')
+mosquitto_host = os.environ.get('MOSQUITTO_HOST')
+influxdb_host = os.environ.get('INFLUXDB_HOST')
+
+def log_debug_data_flow(msg):    
+    if debug_data_flow == "True":
+        print(msg)
 
 
 def parse_topic(topic):
     # Check if the topic follows the expected format
     if '/' not in topic:
-        print("Invalid topic format. Expected format: location/station.")
+        log_debug_data_flow("ERROR: Invalid topic format. Expected format: location/station.")
         return None, None
 
     # Split the topic using the '/' delimiter
@@ -19,7 +25,7 @@ def parse_topic(topic):
 
     # Check if there are exactly two parts
     if len(parts) != 2:
-        print("Invalid topic format. Expected format: location/station.")
+        log_debug_data_flow("ERROR: Invalid topic format. Expected format: location/station.")
         return None, None
 
     # Assign values to station and location
@@ -39,20 +45,19 @@ def is_valid_json(json_str):
 
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
-        print("Adapter connected successfully.")
+        log_debug_data_flow("Adapter connected successfully.")
         client.subscribe("#")
     else:
-        print(f"Failed to connect adapter with code {rc}.")
+        log_debug_data_flow(f"Failed to connect adapter with code {rc}.")
 
 
 def on_message(client, userdata, msg, influxdb_client):
-    # TODO: DE ADAUGAT DEBUT MESSAGES CAND AM VAR DE MEDIU SETATA PE TRUE; inlocuieste print cu logging
-    print(f"TOPIC {msg.topic}: {msg.payload.decode()}")
+    log_debug_data_flow(f"Received a message by topic [{msg.topic}]")
 
     location, station = parse_topic(msg.topic)
 
     if (is_valid_json(msg.payload.decode()) == False):
-        print("Invalid payload JSON format.")
+        log_debug_data_flow("ERROR: Invalid payload JSON format.")
         return
 
     payload = json.loads(msg.payload)
@@ -60,19 +65,17 @@ def on_message(client, userdata, msg, influxdb_client):
     # get each value from payload in an if
     # check if the payload["timestamp"] exists in the payload
     if "timestamp" in payload:
-        print(f"timestamp: {payload['timestamp']}")
+        log_debug_data_flow(f"Data timestamp is: {payload['timestamp']}")
     else:
+        log_debug_data_flow(f"Data timestamp is: NOW")
         timestamp = datetime.now(timezone(timedelta(hours=3))).isoformat()
         payload['timestamp'] = timestamp
-        # de egnerat automat temp pe adaptor
-        print("timestamp not found in payload.")
-        print(f"new generated timestamp: {payload['timestamp']}")
 
     datapoints = []
     for key in payload:
         # if payload[key] is int or float
         if isinstance(payload[key], int) or isinstance(payload[key], float):
-            print(f"{key}: {payload[key]}")
+            log_debug_data_flow(f"{location}.{station}.{key} {payload[key]}")
             data_point = {
                 "measurement": station + "." + key,
                 "tags": {
@@ -88,31 +91,26 @@ def on_message(client, userdata, msg, influxdb_client):
 
     if (len(datapoints) > 0):
         influxdb_client.write_points(datapoints)
-        # print datapoints
-        print(datapoints)
-        print("Data points written to InfluxDB.")
 
 
 def main():
-    influxdb_client = InfluxDBClient(host='localhost', port=8086)
+    influxdb_client = InfluxDBClient(host=influxdb_host)
 
     database_list = influxdb_client.get_list_database()
-    if any(db['name'] == iot_data for db in database_list):
+    if any(db['name'] == db_name for db in database_list):
         # Database exists, switch to it
-        influxdb_client.switch_database(iot_data)
-        print(f"Switched to existing database: {iot_data}")
+        influxdb_client.switch_database(db_name)
     else:
         # Database does not exist, create it
-        influxdb_client.create_database(iot_data)
-        influxdb_client.switch_database(iot_data)
-        print(f"Created and switched to new database: {iot_data}")
+        influxdb_client.create_database(db_name)
+        influxdb_client.switch_database(db_name)
 
     mosquitto_client = mqtt.Client()
     mosquitto_client.on_connect = on_connect
     mosquitto_client.on_message = lambda client, userdata, msg: on_message(
         client, userdata, msg, influxdb_client)  # Pass influxdb_client as a parameter
 
-    mosquitto_client.connect("localhost", 1883)
+    mosquitto_client.connect(mosquitto_host)
     mosquitto_client.loop_forever()
 
 
