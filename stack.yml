@@ -51,6 +51,10 @@ services:
     environment:
       - GF_SECURITY_ADMIN_USER=asistent
       - GF_SECURITY_ADMIN_PASSWORD=grafanaSPRC2023
+    volumes:
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - grafana_data:/var/lib/grafana
 
 networks:
   grafana_influxdb_network:
@@ -59,3 +63,4 @@ networks:
 
 volumes:
   influxdb_data:
+  grafana_data:

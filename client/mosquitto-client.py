@@ -1,85 +1,64 @@
-import paho.mqtt.client as mqtt
+from datetime import datetime, timedelta
 import json
-from random import choice
-
-BATS = [99, 18, 117]
-HUMIDS = [40, 200, 19]
-TMPS = [25.3, 27.5, 23.1]
-ALARMS = [0, 13, 2]
-AQIS = [12, 20, 32]
-RSSIS = [1500, 2023, 2051]
-NUM_TOPICS = 100
+import random
+import paho.mqtt.client as mqtt
 
 def main():
     client = mqtt.Client()
-    client.connect("localhost")
+
+    # Connect to the MQTT broker
+    client.connect("localhost", 1883)
     client.loop_start()
 
+    # get i from user
+    iter = int(input("Enter the number of iterations: "))
+    # Get the current date and time
+    initial_date = datetime.now()
+    current_date = initial_date
 
-    for _ in range(NUM_TOPICS):
+    for i in range(1, iter):
         payload1 = {
-            "BAT" : choice(BATS),
-            "HUMID" : choice(HUMIDS),
-            "PRJ" : "SPRC",
-            "TMP" : choice(TMPS),
-            "status" : "OK",
-            "timestamp" : "2019-11-26T03:54:20+03:00"
+            "BAT": random.randint(40, 95),
+            "CO": random.uniform(62, 66),
+            "PRJ": "SPRC",
+            "HUM": random.uniform(35, 37),
+            "status": "OK",
+            "NO2": random.uniform(0.05, 0.3),
+            "O2": random.uniform(10, 13),
+            "TC": random.uniform(17, 19),
+            "timestamp" : current_date.isoformat()
         }
 
-        client.publish('UPB/RPi_1', json.dumps(payload1))
+        result = client.publish('UPB/Gas', json.dumps(payload1))
+        result.wait_for_publish()
 
         payload2 = {
-            "Alarm": choice(ALARMS),
-            "AQI": choice(AQIS),
-            "RSSI": choice(RSSIS)
+            "BAT": random.randint(70, 100),
+            "test": "SPRC112",
+            "HUM": random.uniform(34, 38),
+            "status": "OK",
+            "TC": random.uniform(17, 19),
+            "timestamp" : current_date.isoformat()
         }
 
-        client.publish('UPB/ZEUS', json.dumps(payload2))
+        result = client.publish('UPB/Mongo', json.dumps(payload2))
+        result.wait_for_publish()
+
+        payload2 = {
+            "BAT": random.randint(50, 70),
+            "test": "SPRC112",
+            "HUM": random.uniform(34, 38),
+            "timestamp" : current_date.isoformat()
+            # "timestamp" : "2024-01-06T00:54:20+03:00"
+        }
+
+        result = client.publish('UPIT/Cherry', json.dumps(payload2))
+        result.wait_for_publish()
+        
+        current_date = initial_date - timedelta(hours=i)
 
     client.disconnect()
     client.loop_stop()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-
-# import json
-# import paho.mqtt.client as mqtt
-
-# def on_publish(client, userdata, mid):
-#     print(f"Message published with MID: {mid}")
-
-# def main():
-#     client = mqtt.Client()
-
-#     # set callback for on_publish
-#     client.on_publish = on_publish
-
-#     # Connect to the MQTT broker
-#     client.connect("localhost", 1883)
-
-#     try:
-#         while True:
-#             # Take input from the user
-#             topic = input("Enter the topic: ")
-
-#             payload1 = {
-#                 "BAT" : 99,
-#                 "HUMID" : 75,
-#                 "PRJ" : "SPRC",
-#                 "TMP" : 26,
-#                 "status" : "OK",
-#                 # "timestamp" : "2019−11−26T03 :54:20+03:00"
-#             }
-
-#             result = client.publish(topic, json.dumps(payload1))
-
-#             # Wait for the message to be published
-#             result.wait_for_publish()
-
-#     except KeyboardInterrupt:
-#         # Disconnect the client upon keyboard interrupt
-#         client.disconnect()
-#         print("Disconnected.")
-
-# if __name__ == "__main__":
-#     main()

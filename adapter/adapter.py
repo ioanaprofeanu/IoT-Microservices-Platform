@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from dateutil import parser
 import json
 import paho.mqtt.client as mqtt
 from influxdb import InfluxDBClient
@@ -17,7 +18,6 @@ def log_debug_data_flow(msg):
 def parse_topic(topic):
     # Check if the topic follows the expected format
     if '/' not in topic:
-        log_debug_data_flow("ERROR: Invalid topic format. Expected format: location/station.")
         return None, None
 
     # Split the topic using the '/' delimiter
@@ -25,7 +25,6 @@ def parse_topic(topic):
 
     # Check if there are exactly two parts
     if len(parts) != 2:
-        log_debug_data_flow("ERROR: Invalid topic format. Expected format: location/station.")
         return None, None
 
     # Assign values to station and location
@@ -55,6 +54,10 @@ def on_message(client, userdata, msg, influxdb_client):
     log_debug_data_flow(f"Received a message by topic [{msg.topic}]")
 
     location, station = parse_topic(msg.topic)
+    
+    if location is None or station is None:
+        log_debug_data_flow("ERROR: Invalid topic format. Expected format: location/station.")
+        return
 
     if (is_valid_json(msg.payload.decode()) == False):
         log_debug_data_flow("ERROR: Invalid payload JSON format.")
@@ -65,6 +68,9 @@ def on_message(client, userdata, msg, influxdb_client):
     # get each value from payload in an if
     # check if the payload["timestamp"] exists in the payload
     if "timestamp" in payload:
+        timestamp_object = parser.parse(payload['timestamp'])
+        timestamp = timestamp_object.strftime("%Y-%m-%dT%H:%M:%S%z")
+        payload['timestamp'] = timestamp
         log_debug_data_flow(f"Data timestamp is: {payload['timestamp']}")
     else:
         log_debug_data_flow(f"Data timestamp is: NOW")

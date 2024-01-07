@@ -1,0 +1,28 @@
+# Configuration file version
+apiVersion: 1
+
+# List of data sources to insert/update depending on what's
+# available in the database.
+datasources:
+  # <string, required> Sets the name you use to refer to
+  # the data source in panels and queries.
+  - name: influxdb
+    # <string, required> Sets the data source type.
+    type: influxdb
+    # <string, required> Sets the access mode, either
+    # proxy or direct (Server or Browser in the UI).
+    # Some data sources are incompatible with any setting
+    # but proxy (Server).
+    access: proxy
+    # <string> Sets the data source's URL, including the
+    # port.
+    url: http://influxdb:8086
+    # <string> Sets the database name, if necessary.
+    database: iot_data
+    # <bool> Toggles whether the data source is pre-selected
+    # for new panels. You can set only one default
+    # data source per organization.
+    isDefault: true
+    # <bool> Allows users to edit data sources from the
+    # Grafana UI.
+    editable: true
