@@ -11,18 +11,17 @@ debug_data_flow = os.environ.get('DEBUG_DATA_FLOW')
 mosquitto_host = os.environ.get('MOSQUITTO_HOST')
 influxdb_host = os.environ.get('INFLUXDB_HOST')
 
-# function for printing debug messages
-
 
 def log_debug_data_flow(msg):
+    """ function for printing debug messages """
+
     # print only if the env variable is set to True
     if debug_data_flow == "True":
         print(msg)
 
-# function for parsing and verifying the topic format
-
 
 def parse_topic(topic):
+    """ function for parsing and verifying the topic format """
     # verify if the topic contains '/'
     if '/' not in topic:
         return None, None
@@ -37,20 +36,18 @@ def parse_topic(topic):
     # return the location and station
     return parts[0], parts[1]
 
-# function for verifying if a given payload is a valid JSON
-
 
 def is_valid_json(json_str):
+    """ function for verifying if a given payload is a valid JSON """
     try:
         loaded_object = json.loads(json_str)
         return isinstance(loaded_object, (dict, list))
     except json.JSONDecodeError:
         return False
 
-# function for handling the adaptor connection to the broker
-
 
 def on_connect(client, userdata, flags, rc):
+    """ function for handling the adaptor connection to the broker """
     if rc == 0:
         log_debug_data_flow("Adapter connected successfully.")
         # subscribe to all topics
@@ -59,8 +56,8 @@ def on_connect(client, userdata, flags, rc):
         log_debug_data_flow(f"Failed to connect adapter with code {rc}.")
 
 
-# function for handling message receival
 def on_message(client, userdata, msg, influxdb_client):
+    """ function for handling message receival """
     log_debug_data_flow(f"Received a message by topic [{msg.topic}]")
 
     # get the location and station from the topic and verify if they are valid
@@ -80,17 +77,22 @@ def on_message(client, userdata, msg, influxdb_client):
     payload = json.loads(msg.payload)
 
     # check if the payload["timestamp"] exists in the payload
-    if "timestamp" in payload:
-        # convert the timestamp to the ISO format
-        timestamp_object = parser.parse(payload['timestamp'])
-        timestamp = timestamp_object.strftime("%Y-%m-%dT%H:%M:%S%z")
-        payload['timestamp'] = timestamp
-        log_debug_data_flow(f"Data timestamp is: {payload['timestamp']}")
-    else:
-        # if the timestamp does not exist, set it to the current time
-        log_debug_data_flow(f"Data timestamp is: NOW")
-        timestamp = datetime.now(timezone(timedelta(hours=3))).isoformat()
-        payload['timestamp'] = timestamp
+    try:
+        if "timestamp" in payload:
+            # convert the timestamp to the ISO format
+            timestamp_object = parser.parse(payload['timestamp'])
+            timestamp = timestamp_object.strftime("%Y-%m-%dT%H:%M:%S%z")
+            payload['timestamp'] = timestamp
+            log_debug_data_flow(f"Data timestamp is: {payload['timestamp']}")
+        else:
+            # if the timestamp does not exist, set it to the current time
+            log_debug_data_flow(f"Data timestamp is: NOW")
+            timestamp = datetime.now(timezone(timedelta(hours=3))).isoformat()
+            payload['timestamp'] = timestamp
+    # if the timestamp is not in a correct format
+    except Exception as e:
+        log_debug_data_flow(f"ERROR: {e}")
+        return
 
     # create the to be inserted datapoints using the payload
     datapoints = []
