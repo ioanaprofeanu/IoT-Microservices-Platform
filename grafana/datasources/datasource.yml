@@ -18,7 +18,7 @@ datasources:
     # port.
     url: http://influxdb:8086
     # <string> Sets the database name, if necessary.
-    database: iot_data
+    database: iot_db
     # <bool> Toggles whether the data source is pre-selected
     # for new panels. You can set only one default
     # data source per organization.

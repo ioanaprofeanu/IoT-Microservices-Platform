@@ -6,13 +6,11 @@ import paho.mqtt.client as mqtt
 def main():
     client = mqtt.Client()
 
-    # Connect to the MQTT broker
     client.connect("localhost", 1883)
     client.loop_start()
 
-    # get i from user
     iter = int(input("Enter the number of iterations: "))
-    # Get the current date and time
+    # get the current date and time
     initial_date = datetime.now()
     current_date = initial_date
 
@@ -44,7 +42,7 @@ def main():
         result = client.publish('UPB/Mongo', json.dumps(payload2))
         result.wait_for_publish()
 
-        payload2 = {
+        payload3 = {
             "BAT": random.randint(50, 70),
             "test": "SPRC112",
             "HUM": random.uniform(34, 38),
@@ -52,9 +50,10 @@ def main():
             # "timestamp" : "2024-01-06T00:54:20+03:00"
         }
 
-        result = client.publish('UPIT/Cherry', json.dumps(payload2))
+        result = client.publish('UPIT/Cherry', json.dumps(payload3))
         result.wait_for_publish()
         
+        # decrement the current date by 1 hour
         current_date = initial_date - timedelta(hours=i)
 
     client.disconnect()

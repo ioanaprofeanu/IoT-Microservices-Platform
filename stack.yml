@@ -22,7 +22,6 @@ services:
       - INFLUXDB_RETENTION_POLICY=autogen
       - INFLUXDB_DATA_RESOLUTION=1s
 
-  # de adaugat aplicatia mea
   adapter:
     build: ./adapter
     image: adapter
@@ -34,7 +33,7 @@ services:
       - DEBUG_DATA_FLOW=True
       - MOSQUITTO_HOST=mosquitto
       - INFLUXDB_HOST=influxdb
-      - DB_NAME=iot_data
+      - DB_NAME=iot_db
     networks:
       - adapter_mosquitto_network
       - adapter_influxdb_network
