@@ -27,7 +27,7 @@ the InfluxDB database - inserting the received MQTT messages on certain topics i
 the hosts it will connect to); DB_NAME (the name of the InfluxDB database)
 - The json message received for each topic is parsed and inserted into the database in the
 following format:
-		```
+```
 		{
             "measurement": station + "." + key,
             "tags": {
@@ -39,7 +39,7 @@ following format:
                 "value": payload[key]
             }
         }
-		```
+```
 
 ### InfluxDB:
 - The InfluxDB version 1.8 was used, as it uses InfluxQL instead of Flux (InfluxQL is easier to use,
