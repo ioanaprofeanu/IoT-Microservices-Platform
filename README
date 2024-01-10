@@ -20,7 +20,7 @@ on docker hub.docker.com
 allowing anonymous clients
 
 ### Adapter:
-- The adaptor was implemented locally and is meant to be "a bridge" between the Mosquitto Broker and
+- The adapter was implemented locally and is meant to be "a bridge" between the Mosquitto Broker and
 the InfluxDB database - inserting the received MQTT messages on certain topics into the database
 - Its environment variables are initialized within the stack.yml file - these are: DEBUG_DATA_FLOW
 (used for logging data, only if it is set to True); MOSQUITTO_HOST and INFLUXDB_HOST (the name of
