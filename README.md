@@ -28,7 +28,7 @@ the hosts it will connect to); DB_NAME (the name of the InfluxDB database)
 - The json message received for each topic is parsed and inserted into the database in the
 following format:
 ```
-		{
+	{
             "measurement": station + "." + key,
             "tags": {
                 "location": location,
