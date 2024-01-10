@@ -23,7 +23,7 @@
 - The payload is parsed:
 	- if the timestamp exists, it is formatted to ISO, and if not, it will have the value of the current time
 	- each key (if its value is a float or int) in the json is added to an array of datapoints, each datapoint having the following format:
-		'''
+		```
 		{
             "measurement": station + "." + key,
             "tags": {
@@ -35,7 +35,7 @@
                 "value": payload[key]
             }
         }
-		'''
+		```
 - The datapoints are inserted in the InfluxDB database
 
 ### InfluxDB:
