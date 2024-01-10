@@ -5,8 +5,6 @@
 - ./run.sh (it is possible to need rights to execute - chmod a+x ./run.sh) - it builds and deploys
 the docker services stack
 - docker stack rm sprc3 - for removing the stack
-- docker swarm init - this command must have been run initially, in order to initialize a docker
-swarm
 - docker service logs sprc3_adapter - command for viewing the adapter logs; for changing the
 DEBUG_DATA_FLOW environment variable, modify the stack.yml file
 
