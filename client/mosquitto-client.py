@@ -31,7 +31,6 @@ def main():
         result.wait_for_publish()
 
         current_date = current_date - timedelta(seconds=10)
-
         payload2 = {
             "BAT": random.randint(70, 100),
             "test": "SPRC112",
@@ -44,19 +43,19 @@ def main():
         result = client.publish('UPB/Mongo', json.dumps(payload2))
         result.wait_for_publish()
 
-        current_date = current_date - timedelta(seconds=10) - timedelta(minutes=20)
-
         payload3 = {
             "BAT": random.randint(50, 70),
             "test": "SPRC112",
             "HUM": random.uniform(34, 38),
             "timestamp" : current_date.isoformat()
+            # "timestamp" : "2024-01-06T00:54:20+03:00"
         }
 
         result = client.publish('UPIT/Cherry', json.dumps(payload3))
         result.wait_for_publish()
         
-        current_date = current_date - timedelta(hours=i)
+        # decrement the current date by 1 hour
+        current_date = initial_date - timedelta(hours=i)
 
     client.disconnect()
     client.loop_stop()
